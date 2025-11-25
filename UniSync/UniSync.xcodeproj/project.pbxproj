@@ -38,9 +38,22 @@
 		58CCE5CB2ED4C3B700EA033D /* UniSyncUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = UniSyncUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		58CCE73A2ED5376600EA033D /* Exceptions for "UniSync" folder in "UniSync" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 58CCE5B32ED4C3B500EA033D /* UniSync */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		58CCE5B62ED4C3B500EA033D /* UniSync */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				58CCE73A2ED5376600EA033D /* Exceptions for "UniSync" folder in "UniSync" target */,
+			);
 			path = UniSync;
 			sourceTree = "<group>";
 		};
@@ -433,6 +446,7 @@
 				DEVELOPMENT_TEAM = QN9S6R7W7Y;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = UniSync/Info.plist;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -465,6 +479,7 @@
 				DEVELOPMENT_TEAM = QN9S6R7W7Y;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = UniSync/Info.plist;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;

@@ -6,12 +6,18 @@
 //
 
 import SwiftUI
+import Firebase
 
 @main
 struct UniSyncApp: App {
+    init() {
+        FirebaseApp.configure()
+        NotificationManager.shared.requestPermission()
+    }
+
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            RootView()
         }
     }
 }
