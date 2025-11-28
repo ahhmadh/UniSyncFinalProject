@@ -294,33 +294,47 @@ final class FirebaseManager {
     // MARK: - PROFILE (Onboarding)
     func uploadProfileImage(_ image: UIImage, completion: @escaping (String?) -> Void) {
         guard let userId = userId else {
-            print("⚠️ No user logged in — cannot upload image.")
+            print("❌ uploadProfileImage: No userId")
             completion(nil)
             return
         }
 
+        print("📸 Starting upload for userId:", userId)
+
         let ref = Storage.storage().reference().child("profileImages/\(userId).jpg")
+
         guard let data = image.jpegData(compressionQuality: 0.8) else {
-            print("⚠️ Failed to compress image.")
+            print("❌ Failed to compress image")
             completion(nil)
             return
         }
 
         ref.putData(data, metadata: nil) { _, error in
             if let error = error {
-                print("🔥 Upload error:", error.localizedDescription)
+                print("❌ Upload failed:", error.localizedDescription)
                 completion(nil)
                 return
             }
 
-            ref.downloadURL { url, _ in
+            print("✅ Upload success, fetching download URL...")
+
+            ref.downloadURL { url, error in
+                if let error = error {
+                    print("❌ Failed to get download URL:", error.localizedDescription)
+                    completion(nil)
+                    return
+                }
+
+                print("🔗 Download URL =", url?.absoluteString ?? "nil")
                 completion(url?.absoluteString)
             }
         }
     }
 
+
     func saveUserProfile(email: String, semester: String, profileImageUrl: String?, completion: ((Error?) -> Void)? = nil) {
-        guard let userId = userId else {
+        
+        guard let uid = Auth.auth().currentUser?.uid else {
             print("⚠️ No user logged in — cannot save user profile.")
             return
         }
@@ -328,17 +342,22 @@ final class FirebaseManager {
         var data: [String: Any] = [
             "email": email,
             "semester": semester,
-            "createdAt": Timestamp(date: Date())
+            "createdAt": Timestamp(date: Date()),
+            "profileImageUrl": profileImageUrl
         ]
 
         if let profileImageUrl = profileImageUrl {
             data["profileImageUrl"] = profileImageUrl
         }
 
-        db.collection("users").document(userId)
-            .collection("profile").document("info")
-            .setData(data, completion: completion)
+        Firestore.firestore()
+            .collection("users")
+            .document(uid)
+            .collection("profile")
+            .document("info")
+            .setData(data, merge: true, completion: completion)
     }
+
 
     func fetchUserProfile(completion: @escaping (_ exists: Bool, _ semester: String?) -> Void) {
         guard let userId = userId else {
@@ -363,4 +382,27 @@ final class FirebaseManager {
                 }
             }
     }
+    
+    func getProfileImageUrl(completion: @escaping (String?) -> Void) {
+
+        guard let uid = Auth.auth().currentUser?.uid else {
+            completion(nil)
+            return
+        }
+
+        Firestore.firestore()
+            .collection("users")
+            .document(uid)
+            .collection("profile")
+            .document("info")
+            .getDocument { doc, error in
+
+                if let data = doc?.data() {
+                    completion(data["profileImageUrl"] as? String)
+                } else {
+                    completion(nil)
+                }
+            }
+    }
+
 }

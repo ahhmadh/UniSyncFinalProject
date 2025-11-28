@@ -10,6 +10,8 @@ import SwiftUI
 import Combine
 
 struct DashboardView: View {
+    var profileImageUrl: String?  
+    
     @StateObject private var vm = DashboardViewModel()
 
     var body: some View {
@@ -37,7 +39,9 @@ struct DashboardView: View {
                                     Spacer()
                                     Text(a.dueDate, style: .date).foregroundStyle(.secondary)
                                 }
-                                .padding().background(.ultraThinMaterial).clipShape(RoundedRectangle(cornerRadius: 12))
+                                .padding()
+                                .background(.ultraThinMaterial)
+                                .clipShape(RoundedRectangle(cornerRadius: 12))
                             }
                         }
                     }
@@ -46,6 +50,39 @@ struct DashboardView: View {
                 .onAppear { vm.load() }
             }
             .navigationTitle("Dashboard")
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    profileImageView
+                }
+            }
+        }
+    }
+
+    // MARK: - Profile Image
+    private var profileImageView: some View {
+        Group {
+            if let urlString = profileImageUrl,
+               let url = URL(string: urlString) {
+                AsyncImage(url: url) { phase in
+                    if let image = phase.image {
+                        image.resizable()
+                             .scaledToFill()
+                             .frame(width: 40, height: 40)
+                             .clipShape(Circle())
+                    } else if phase.error != nil {
+                        Image(systemName: "person.circle.fill")
+                            .resizable()
+                            .frame(width: 40, height: 40)
+                    } else {
+                        ProgressView()
+                    }
+                }
+            } else {
+                Image(systemName: "person.circle")
+                    .resizable()
+                    .frame(width: 40, height: 40)
+                    .foregroundColor(.gray)
+            }
         }
     }
 

@@ -13,6 +13,8 @@ struct RootView: View {
     @State private var isProfileComplete = false
     @State private var isLoading = true
 
+    @State private var profileImageUrl: String? = nil  
+
     @StateObject private var coursesVM = CoursesViewModel()
     @StateObject private var assignmentsVM = AssignmentsViewModel()
 
@@ -22,22 +24,47 @@ struct RootView: View {
                 ProgressView("Loading...")
             } else if !isAuthenticated {
                 LoginView(onLoginSuccess: {
-                    checkUserStatus()  // Re-check after login
+                    checkUserStatus()
                 })
             } else if !isProfileComplete {
                 OnboardingView { semester, image in
                     if let email = Auth.auth().currentUser?.email {
                         if let image = image {
+
+                            print("📸 Complete tapped — image selected = YES")
+
                             FirebaseManager.shared.uploadProfileImage(image) { url in
-                                FirebaseManager.shared.saveUserProfile(email: email, semester: semester, profileImageUrl: url) { _ in
-                                    isProfileComplete = true
+                                print("🔗 uploadProfileImage returned URL =", url ?? "nil")
+
+                                FirebaseManager.shared.saveUserProfile(email: email, semester: semester, profileImageUrl: url) { error in
+
+                                    if let error = error {
+                                        print("❌ Error saving profile:", error.localizedDescription)
+                                    } else {
+                                        print("✅ Profile saved successfully with URL:", url ?? "nil")
+                                    }
+
+                                    self.profileImageUrl = url
+                                    self.isProfileComplete = true
                                 }
                             }
+
                         } else {
-                            FirebaseManager.shared.saveUserProfile(email: email, semester: semester, profileImageUrl: nil) { _ in
-                                isProfileComplete = true
+
+                            print("📸 Complete tapped — NO image selected")
+
+                            FirebaseManager.shared.saveUserProfile(email: email, semester: semester, profileImageUrl: nil) { error in
+                                if let error = error {
+                                    print("❌ Error saving profile:", error.localizedDescription)
+                                } else {
+                                    print("✅ Profile saved successfully (no image)")
+                                }
+
+                                self.profileImageUrl = nil
+                                self.isProfileComplete = true
                             }
                         }
+
                     }
                 }
             } else {
@@ -55,18 +82,17 @@ struct RootView: View {
             FirebaseApp.configure()
         }
 
-        // 🔥 Always force logout on app start
-        try? Auth.auth().signOut()
-        GIDSignIn.sharedInstance.signOut()
+        // Force logout for testing
+//        try? Auth.auth().signOut()
+//        GIDSignIn.sharedInstance.signOut()
 
-        // Reload status → forces LoginView
         checkUserStatus()
     }
 
     // MARK: - Main TabView
     private var mainTabView: some View {
         TabView {
-            DashboardView()
+            DashboardView(profileImageUrl: profileImageUrl)  
                 .tabItem { Label("Home", systemImage: "house") }
 
             CoursesView(viewModel: coursesVM)
@@ -95,8 +121,14 @@ struct RootView: View {
             print("✅ Logged in as: \(user.email ?? "Unknown")")
             isAuthenticated = true
 
-            FirebaseManager.shared.fetchUserProfile { exists, _ in
+            FirebaseManager.shared.fetchUserProfile { exists, data in
                 isProfileComplete = exists
+                if let email = user.email {
+                    FirebaseManager.shared.getProfileImageUrl { url in
+                        self.profileImageUrl = url
+                    }
+                }
+
                 isLoading = false
             }
         } else {
