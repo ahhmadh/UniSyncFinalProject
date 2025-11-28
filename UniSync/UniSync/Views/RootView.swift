@@ -2,13 +2,11 @@
 //  RootView.swift
 //  UniSync
 //
-//  Created by Ahmad Hassan on 2025-11-24.
-//
-
 
 import SwiftUI
 import FirebaseAuth
 import FirebaseCore
+import GoogleSignIn
 
 struct RootView: View {
     @State private var isAuthenticated = false
@@ -24,7 +22,7 @@ struct RootView: View {
                 ProgressView("Loading...")
             } else if !isAuthenticated {
                 LoginView(onLoginSuccess: {
-                    checkUserStatus()
+                    checkUserStatus()  // Re-check after login
                 })
             } else if !isProfileComplete {
                 OnboardingView { semester, image in
@@ -56,6 +54,12 @@ struct RootView: View {
         if FirebaseApp.app() == nil {
             FirebaseApp.configure()
         }
+
+        // 🔥 Always force logout on app start
+        try? Auth.auth().signOut()
+        GIDSignIn.sharedInstance.signOut()
+
+        // Reload status → forces LoginView
         checkUserStatus()
     }
 
@@ -88,14 +92,15 @@ struct RootView: View {
     // MARK: - Auth Check
     private func checkUserStatus() {
         if let user = Auth.auth().currentUser {
-            print("✅ User logged in: \(user.email ?? "Unknown")")
+            print("✅ Logged in as: \(user.email ?? "Unknown")")
             isAuthenticated = true
+
             FirebaseManager.shared.fetchUserProfile { exists, _ in
                 isProfileComplete = exists
                 isLoading = false
             }
         } else {
-            print("⚠️ No user logged in.")
+            print("⚠️ No logged-in user. Showing LoginView.")
             isAuthenticated = false
             isLoading = false
         }
